@@ -9,6 +9,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// tests for other methods in the user service will follow
+// this same pattern.
 func Test_userService_CreateUser(t *testing.T) {
 	type args struct {
 		ctx  context.Context
