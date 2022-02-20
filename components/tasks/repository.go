@@ -21,7 +21,7 @@ import (
 type repository interface {
 	saveTask(ctx context.Context, task Task) (*Task, error)
 	getTaskByID(ctx context.Context, taskID string) (*Task, error)
-	getTasks(ctx context.Context, lastID string, limit int) ([]Task, error)
+	getTasks(ctx context.Context, userID, lastID string, limit int) ([]Task, error)
 	deleteTaskByID(ctx context.Context, taskID string) (*Task, error)
 }
 
@@ -58,8 +58,8 @@ func (r *taskRepo) getTaskByID(ctx context.Context, taskID string) (*Task, error
 	return &task, nil
 }
 
-func (r *taskRepo) getTasks(ctx context.Context, lastID string, limit int) ([]Task, error) {
-	filter := bson.M{"_id": bson.M{"$gt": lastID}}
+func (r *taskRepo) getTasks(ctx context.Context, userID, lastID string, limit int) ([]Task, error) {
+	filter := bson.M{"_id": bson.M{"$gt": lastID}, "userId": userID}
 	findOpt := options.Find().SetLimit(int64(limit))
 	cursor, err := r.tasksCollection.Find(ctx, filter, findOpt)
 	if err != nil {

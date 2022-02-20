@@ -56,7 +56,7 @@ func (s *userService) GetUser(ctx context.Context, userID string) (*User, error)
 	user, err := s.userRepo.getUserByID(ctx, userID)
 	if err != nil {
 		log.WithError(err).Error("an error occured while retrieving user")
-		return nil, errSomethingWentWrong
+		return nil, fmt.Errorf("user does not exist")
 	}
 	return user, nil
 }
@@ -73,6 +73,11 @@ func (s *userService) GetUsers(ctx context.Context, lastID string, limit int) ([
 
 func (s *userService) DeleteUser(ctx context.Context, userID string) (*User, error) {
 	log := s.log.WithContext(ctx).WithField("userId", userID)
+	// checking if user id is valid.
+	_, err := s.GetUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
 	user, err := s.userRepo.deleteUserByID(ctx, userID)
 	if err != nil {
 		log.WithError(err).Error("an error occured while deleting user")
