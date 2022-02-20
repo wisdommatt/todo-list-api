@@ -25,7 +25,7 @@ type repository interface {
 	deleteUserByID(ctx context.Context, userID string) (*User, error)
 }
 
-// userRepo is the default implementation for repository
+// userRepo is the default implementation for user repository
 // interface.
 type userRepo struct {
 	usersCollection *mongo.Collection
