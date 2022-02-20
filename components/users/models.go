@@ -7,6 +7,6 @@ type User struct {
 	FirstName   string    `json:"firstName" bson:"firstName,omitempty"`
 	LastName    string    `json:"lastName" bson:"lastName,omitempty"`
 	Email       string    `json:"email" bson:"email,omitempty"`
-	TimeAdded   time.Time `json:"timeAdded" bson:"timeAdded,omitempty"`
-	LastUpdated time.Time `json:"lastUpdated" bson:"lastUpdated,omitempty"`
+	TimeAdded   time.Time `json:"-" bson:"timeAdded,omitempty"`
+	LastUpdated time.Time `json:"-" bson:"lastUpdated,omitempty"`
 }

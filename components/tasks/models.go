@@ -9,5 +9,5 @@ type Task struct {
 	EndTime        time.Time `json:"endTime" bson:"endTime,omitempty"`
 	UserID         string    `json:"userID" bson:"userID,omitempty"`
 	ReminderPeriod time.Time `json:"reminderPeriod" bson:"reminderPeriod,omitempty"`
-	TimeAdded      time.Time `json:"timeAdded" bson:"timeAdded,omitempty"`
+	TimeAdded      time.Time `json:"-" bson:"timeAdded,omitempty"`
 }

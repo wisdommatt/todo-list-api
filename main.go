@@ -1,15 +1,19 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/go-chi/chi"
+	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/wisdommatt/creativeadvtech-assessment/components/tasks"
 	"github.com/wisdommatt/creativeadvtech-assessment/components/users"
 	httphandlers "github.com/wisdommatt/creativeadvtech-assessment/http-handlers"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var defaultPort = "8080"
@@ -24,14 +28,17 @@ func main() {
 	log.SetReportCaller(true)
 	log.SetOutput(os.Stdout)
 
-	userService := users.NewService(nil, log)
-	taskServie := tasks.NewService(userService, nil, log)
+	mustLoadDotenv(log)
+
+	mongoDB := mustConnectMongoDB(log)
+	userService := users.NewService(mongoDB, log)
+	taskServie := tasks.NewService(userService, mongoDB, log)
 
 	router := chi.NewRouter()
 	router.Route("/users/", func(r chi.Router) {
 		r.Post("/", httphandlers.HandleCreateUserEndpoint(userService))
 		r.Get("/{userId}", httphandlers.HandleGetUserEndpoint(userService))
-		r.Get("/", httphandlers.HandleGetUserEndpoint(userService))
+		r.Get("/", httphandlers.HandleGetUsersEndpoint(userService))
 		r.Delete("/{userId}", httphandlers.HandleDeleteUserEndpoint(userService))
 		r.Get("/{userId}/tasks", httphandlers.HandleGetTasksEndpoint(taskServie))
 	})
@@ -50,4 +57,21 @@ func main() {
 	}
 	log.Infof("app running on port: %s", port)
 	log.Fatal(server.ListenAndServe())
+}
+
+func mustConnectMongoDB(log *logrus.Logger) *mongo.Database {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_URI")))
+	if err != nil {
+		log.WithError(err).Fatal("Unable to connect to mongodb")
+	}
+	return client.Database(os.Getenv("MONGODB_DATABASE_NAME"))
+}
+
+func mustLoadDotenv(log *logrus.Logger) {
+	err := godotenv.Load(".env", ".env-defaults")
+	if err != nil {
+		log.WithError(err).Fatal("Unable to load env files")
+	}
 }

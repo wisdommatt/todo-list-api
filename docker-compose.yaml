@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  app:
+    container_name: tasks-assessment
+    image: golang:1.17-alpine
+    command: ["sh", "-c", "go run main.go"]
+    ports:
+      - 5555:5555
+    environment:
+      - PORT=5555
+      - MONGODB_URI=mongodb://mongodb/tasks-assessment?retryWrites=true&w=majority&authSource=admin
+      - MONGODB_DATABASE_NAME=tasks-assessment
+    volumes:
+      - ./:/app
+    working_dir: /app
+    depends_on:
+      - mongodb
+
+  mongodb:
+    container_name: tasks-assessment-mongodb
+    image: mongo:5.0
+    environment:
+      - MONGO_INITDB_DATABASE=tasks-assessment
+    # NOTE: in a real application the database service
+    # will/should point to a volume on the host machine
+    # to avoid data loss when the container is removed.
