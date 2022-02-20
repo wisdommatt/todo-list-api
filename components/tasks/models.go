@@ -7,7 +7,7 @@ type Task struct {
 	Title          string    `json:"title" bson:"title,omitempty"`
 	StartTime      time.Time `json:"startTime" bson:"startTime,omitempty"`
 	EndTime        time.Time `json:"endTime" bson:"endTime,omitempty"`
-	UserID         string    `json:"userID" bson:"userID,omitempty"`
+	UserID         string    `json:"userId" bson:"userId,omitempty"`
 	ReminderPeriod time.Time `json:"reminderPeriod" bson:"reminderPeriod,omitempty"`
 	TimeAdded      time.Time `json:"-" bson:"timeAdded,omitempty"`
 }

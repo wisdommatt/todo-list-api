@@ -23,6 +23,7 @@ type repository interface {
 	getTaskByID(ctx context.Context, taskID string) (*Task, error)
 	getTasks(ctx context.Context, userID, lastID string, limit int) ([]Task, error)
 	deleteTaskByID(ctx context.Context, taskID string) (*Task, error)
+	getTaskWithTimeRange(ctx context.Context, userID string, startTime, endTime time.Time) (*Task, error)
 }
 
 // taskRepo is the default implementation for task repository
@@ -76,12 +77,29 @@ func (r *taskRepo) getTasks(ctx context.Context, userID, lastID string, limit in
 
 func (r *taskRepo) deleteTaskByID(ctx context.Context, taskID string) (*Task, error) {
 	filter := bson.M{"_id": taskID}
-	cursor := r.tasksCollection.FindOneAndDelete(ctx, filter)
-	if cursor.Err() != nil {
-		return nil, cursor.Err()
-	}
 	var task Task
-	err := cursor.Decode(&task)
+	err := r.tasksCollection.FindOneAndDelete(ctx, filter).Decode(&task)
+	if err != nil {
+		return nil, err
+	}
+	return &task, nil
+}
+
+func (r *taskRepo) getTaskWithTimeRange(ctx context.Context, userID string, startTime, endTime time.Time) (*Task, error) {
+	filter := bson.M{"$or": []bson.M{
+		{
+			"startTime": bson.M{"$lte": startTime},
+			"endTime":   bson.M{"$gte": startTime},
+			"userId":    userID,
+		},
+		{
+			"startTime": bson.M{"$lte": endTime},
+			"endTime":   bson.M{"$gte": endTime},
+			"userId":    userID,
+		},
+	}}
+	var task Task
+	err := r.tasksCollection.FindOne(ctx, filter).Decode(&task)
 	if err != nil {
 		return nil, err
 	}

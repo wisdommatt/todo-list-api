@@ -83,12 +83,8 @@ func (r *userRepo) getUsers(ctx context.Context, lastID string, limit int) ([]Us
 // for storing deleted users.
 func (r *userRepo) deleteUserByID(ctx context.Context, userID string) (*User, error) {
 	filter := bson.M{"_id": userID}
-	cursor := r.usersCollection.FindOneAndDelete(ctx, filter)
-	if cursor.Err() != nil {
-		return nil, cursor.Err()
-	}
 	var deletedUser User
-	err := cursor.Decode(&deletedUser)
+	err := r.usersCollection.FindOneAndDelete(ctx, filter).Decode(&deletedUser)
 	if err != nil {
 		return nil, err
 	}

@@ -45,6 +45,15 @@ func (s *taskService) CreateTask(ctx context.Context, task Task) (*Task, error) 
 	if err != nil {
 		return nil, err
 	}
+	// checking if the new task is overlapping with another
+	// existing task.
+	overlappingTask, err := s.taskRepo.getTaskWithTimeRange(ctx, task.UserID, task.StartTime, task.EndTime)
+	log.Infof("overlapping %v %v", overlappingTask, err)
+	if overlappingTask != nil {
+		err := fmt.Errorf("this task if overlapping with %s, pick another time", overlappingTask.Title)
+		log.WithError(err).Error("overlapping task")
+		return nil, err
+	}
 	newTask, err := s.taskRepo.saveTask(ctx, task)
 	if err != nil {
 		log.WithError(err).Error("an error occured while creating task")
