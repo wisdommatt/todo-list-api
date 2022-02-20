@@ -6,6 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/wisdommatt/creativeadvtech-assessment/components/users"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Service is the interface that describes a task repository
@@ -29,10 +30,10 @@ var (
 )
 
 // NewService creates a new task service.
-func NewService(userService users.Service, taskRepo repository, log *logrus.Logger) *taskService {
+func NewService(userService users.Service, mongoDB *mongo.Database, log *logrus.Logger) *taskService {
 	return &taskService{
 		userService: userService,
-		taskRepo:    taskRepo,
+		taskRepo:    newRepository(mongoDB),
 		log:         log,
 	}
 }

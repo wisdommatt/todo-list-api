@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
+	"github.com/wisdommatt/creativeadvtech-assessment/components/tasks"
 	"github.com/wisdommatt/creativeadvtech-assessment/components/users"
 	httphandlers "github.com/wisdommatt/creativeadvtech-assessment/http-handlers"
 )
@@ -24,6 +25,7 @@ func main() {
 	log.SetOutput(os.Stdout)
 
 	userService := users.NewService(nil, log)
+	taskServie := tasks.NewService(userService, nil, log)
 
 	router := chi.NewRouter()
 	router.Route("/users/", func(r chi.Router) {
@@ -31,6 +33,10 @@ func main() {
 		r.Get("/{userId}", httphandlers.HandleGetUserEndpoint(userService))
 		r.Get("/", httphandlers.HandleGetUserEndpoint(userService))
 		r.Delete("/{userId}", httphandlers.HandleDeleteUserEndpoint(userService))
+	})
+
+	router.Route("/tasks/", func(r chi.Router) {
+		r.Post("/", httphandlers.HandleCreateTaskEndpoint(taskServie))
 	})
 
 	server := &http.Server{

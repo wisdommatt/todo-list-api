@@ -31,8 +31,8 @@ type taskRepo struct {
 	tasksCollection *mongo.Collection
 }
 
-// NewRepository creates a new task repository.
-func NewRepository(db *mongo.Database) *taskRepo {
+// newRepository creates a new task repository.
+func newRepository(db *mongo.Database) *taskRepo {
 	return &taskRepo{
 		tasksCollection: db.Collection("tasks"),
 	}
