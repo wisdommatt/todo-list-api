@@ -99,3 +99,25 @@ func HandleGetUsersEndpoint(userService users.Service) http.HandlerFunc {
 		})
 	}
 }
+
+// HandleDeleteUserEndpoint is the http endpoint handler for deleting user.
+func HandleDeleteUserEndpoint(userService users.Service) http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		userID := chi.URLParam(r, "userId")
+		user, err := userService.DeleteUser(r.Context(), userID)
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(rw).Encode(userApiResponse{
+				Status:  "error",
+				Message: err.Error(),
+			})
+			return
+		}
+		rw.WriteHeader(http.StatusOK)
+		json.NewEncoder(rw).Encode(userApiResponse{
+			Status:  "success",
+			Message: "user deleted successfully",
+			User:    user,
+		})
+	}
+}

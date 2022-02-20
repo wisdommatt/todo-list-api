@@ -30,6 +30,7 @@ func main() {
 		r.Post("/", httphandlers.HandleCreateUserEndpoint(userService))
 		r.Get("/{userId}", httphandlers.HandleGetUserEndpoint(userService))
 		r.Get("/", httphandlers.HandleGetUserEndpoint(userService))
+		r.Delete("/{userId}", httphandlers.HandleDeleteUserEndpoint(userService))
 	})
 
 	server := &http.Server{
