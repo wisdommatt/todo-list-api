@@ -54,7 +54,7 @@ func TestHandleCreateUserEndpoint(t *testing.T) {
 				t.Errorf("want %v got %v", tt.wantStatusCode, rr.Code)
 			}
 			if rr.Code == http.StatusOK {
-				var response createUserResponse
+				var response userApiResponse
 				err := json.NewDecoder(rr.Body).Decode(&response)
 				if err != nil {
 					t.Fatal(err)

@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
 	"github.com/wisdommatt/creativeadvtech-assessment/components/users"
 	httphandlers "github.com/wisdommatt/creativeadvtech-assessment/http-handlers"
@@ -20,15 +21,19 @@ func main() {
 	log := logrus.New()
 	log.SetFormatter(&logrus.JSONFormatter{PrettyPrint: true})
 	log.SetReportCaller(true)
+	log.SetOutput(os.Stdout)
 
 	userService := users.NewService(nil, log)
 
-	mux := http.NewServeMux()
-	mux.Handle("/users/", httphandlers.HandleCreateUserEndpoint(userService))
+	router := chi.NewRouter()
+	router.Route("/users/", func(r chi.Router) {
+		r.Post("/", httphandlers.HandleCreateUserEndpoint(userService))
+		r.Get("/users/{userId}", httphandlers.HandleGetUserEndpoint(userService))
+	})
 
 	server := &http.Server{
 		Addr:         ":" + defaultPort,
-		Handler:      mux,
+		Handler:      router,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
