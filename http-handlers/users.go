@@ -3,6 +3,7 @@ package httphandlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/wisdommatt/creativeadvtech-assessment/components/users"
@@ -12,6 +13,12 @@ type userApiResponse struct {
 	Status  string      `json:"status"`
 	Message string      `json:"message"`
 	User    *users.User `json:"user"`
+}
+
+type getUsersResponse struct {
+	Status  string       `json:"status"`
+	Message string       `json:"message"`
+	Users   []users.User `json:"users"`
 }
 
 // HandleCreateUserEndpoint is the http handler for create user
@@ -46,7 +53,7 @@ func HandleCreateUserEndpoint(userService users.Service) http.HandlerFunc {
 	}
 }
 
-// HandleGetUserEndpoint is the http request handler to get user details.
+// HandleGetUserEndpoint is the http endpoint handler to get user details.
 func HandleGetUserEndpoint(userService users.Service) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		userID := chi.URLParam(r, "userId")
@@ -64,6 +71,31 @@ func HandleGetUserEndpoint(userService users.Service) http.HandlerFunc {
 			Status:  "success",
 			Message: "user retrieved successfully",
 			User:    user,
+		})
+	}
+}
+
+// HandleGetUsersEndpoint is the http endpoint handler for retrieving
+// users.
+func HandleGetUsersEndpoint(userService users.Service) http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		lastID := r.URL.Query().Get("lastId")
+		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+		users, err := userService.GetUsers(r.Context(), lastID, limit)
+		if err != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(rw).Encode(getUsersResponse{
+				Status:  "error",
+				Message: err.Error(),
+				Users:   users,
+			})
+			return
+		}
+		rw.WriteHeader(http.StatusOK)
+		json.NewEncoder(rw).Encode(getUsersResponse{
+			Status:  "success",
+			Message: "users retrieved successfully",
+			Users:   users,
 		})
 	}
 }

@@ -28,7 +28,8 @@ func main() {
 	router := chi.NewRouter()
 	router.Route("/users/", func(r chi.Router) {
 		r.Post("/", httphandlers.HandleCreateUserEndpoint(userService))
-		r.Get("/users/{userId}", httphandlers.HandleGetUserEndpoint(userService))
+		r.Get("/{userId}", httphandlers.HandleGetUserEndpoint(userService))
+		r.Get("/", httphandlers.HandleGetUserEndpoint(userService))
 	})
 
 	server := &http.Server{
