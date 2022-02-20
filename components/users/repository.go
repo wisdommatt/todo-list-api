@@ -10,6 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// the repository layer is where all interactions with any form of
+// persistent data storage/retrieval happens.
 // types, variables and functions related to user repository
 // are not exported because they are not supposed to be exposed
 // outside of this package.
@@ -17,6 +19,10 @@ import (
 // repository is the interface that describes a user
 // repository.
 type repository interface {
+	saveUser(ctx context.Context, user User) (*User, error)
+	getUserByID(ctx context.Context, userID string) (*User, error)
+	getUsers(ctx context.Context, lastID string, limit int) ([]User, error)
+	deleteUserByID(ctx context.Context, userID string) (*User, error)
 }
 
 // userRepo is the default implementation for repository
