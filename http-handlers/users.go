@@ -87,7 +87,6 @@ func HandleGetUsersEndpoint(userService users.Service) http.HandlerFunc {
 			json.NewEncoder(rw).Encode(getUsersResponse{
 				Status:  "error",
 				Message: err.Error(),
-				Users:   users,
 			})
 			return
 		}
