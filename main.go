@@ -28,7 +28,7 @@ func main() {
 	log.SetReportCaller(true)
 	log.SetOutput(os.Stdout)
 
-	mustLoadDotenv(log)
+	godotenv.Load(".env", ".env-defaults")
 
 	mongoDB := mustConnectMongoDB(log)
 	userService := users.NewService(mongoDB, log)
@@ -50,7 +50,7 @@ func main() {
 	})
 
 	server := &http.Server{
-		Addr:         ":" + defaultPort,
+		Addr:         ":" + port,
 		Handler:      router,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
@@ -67,11 +67,4 @@ func mustConnectMongoDB(log *logrus.Logger) *mongo.Database {
 		log.WithError(err).Fatal("Unable to connect to mongodb")
 	}
 	return client.Database(os.Getenv("MONGODB_DATABASE_NAME"))
-}
-
-func mustLoadDotenv(log *logrus.Logger) {
-	err := godotenv.Load(".env", ".env-defaults")
-	if err != nil {
-		log.WithError(err).Fatal("Unable to load env files")
-	}
 }
