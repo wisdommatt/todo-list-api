@@ -41,6 +41,7 @@ func main() {
 		r.Get("/", httphandlers.HandleGetUsersEndpoint(userService))
 		r.Delete("/{userId}", httphandlers.HandleDeleteUserEndpoint(userService))
 		r.Get("/{userId}/tasks", httphandlers.HandleGetTasksEndpoint(taskServie))
+		r.Post("/login", httphandlers.HandleUserLoginEndpoint(userService))
 	})
 
 	router.Route("/tasks/", func(r chi.Router) {

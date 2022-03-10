@@ -21,6 +21,7 @@ import (
 type repository interface {
 	saveUser(ctx context.Context, user User) (*User, error)
 	getUserByID(ctx context.Context, userID string) (*User, error)
+	getUserByEmail(ctx context.Context, email string) (*User, error)
 	getUsers(ctx context.Context, lastID string, limit int) ([]User, error)
 	deleteUserByID(ctx context.Context, userID string) (*User, error)
 }
@@ -51,6 +52,16 @@ func (r *userRepo) saveUser(ctx context.Context, user User) (*User, error) {
 
 func (r *userRepo) getUserByID(ctx context.Context, userID string) (*User, error) {
 	filter := bson.M{"_id": userID}
+	var user User
+	err := r.usersCollection.FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *userRepo) getUserByEmail(ctx context.Context, email string) (*User, error) {
+	filter := bson.M{"email": email}
 	var user User
 	err := r.usersCollection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {

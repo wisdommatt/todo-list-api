@@ -28,6 +28,18 @@ type getUsersResponse struct {
 	Users   []users.User `json:"users"`
 }
 
+type loginUserInput struct {
+	Email    string `json:"email" bson:"email,omitempty"`
+	Password string `json:"password" bson:"password,omitempty"`
+}
+
+type loginUserResponse struct {
+	Status    string      `json:"status"`
+	Message   string      `json:"message"`
+	User      *users.User `json:"user"`
+	AuthToken string      `json:"authToken"`
+}
+
 // HandleCreateUserEndpoint is the http handler for create user
 // endpoint.
 func HandleCreateUserEndpoint(userService users.Service) http.HandlerFunc {
@@ -129,6 +141,38 @@ func HandleDeleteUserEndpoint(userService users.Service) http.HandlerFunc {
 			Status:  "success",
 			Message: "user deleted successfully",
 			User:    user,
+		})
+	}
+}
+
+// HandleUserLoginEndpoint is the http endpoint handler for user login.
+func HandleUserLoginEndpoint(userService users.Service) http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		var payload loginUserInput
+		err := json.NewDecoder(r.Body).Decode(&payload)
+		if err != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(rw).Encode(loginUserResponse{
+				Status:  "error",
+				Message: "invalid json payload",
+			})
+			return
+		}
+		user, authToken, err := userService.LoginUser(r.Context(), payload.Email, payload.Password)
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(rw).Encode(loginUserResponse{
+				Status:  "error",
+				Message: err.Error(),
+			})
+			return
+		}
+		rw.WriteHeader(http.StatusOK)
+		json.NewEncoder(rw).Encode(loginUserResponse{
+			Status:    "success",
+			Message:   "user login successfully",
+			User:      user,
+			AuthToken: authToken,
 		})
 	}
 }

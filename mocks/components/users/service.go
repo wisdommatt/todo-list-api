@@ -83,6 +83,29 @@ func (_m *Service) GetUser(ctx context.Context, userID string) (*users.User, err
 	return r0, r1
 }
 
+// GetUserByEmail provides a mock function with given fields: ctx, email
+func (_m *Service) GetUserByEmail(ctx context.Context, email string) (*users.User, error) {
+	ret := _m.Called(ctx, email)
+
+	var r0 *users.User
+	if rf, ok := ret.Get(0).(func(context.Context, string) *users.User); ok {
+		r0 = rf(ctx, email)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*users.User)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, email)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetUsers provides a mock function with given fields: ctx, lastID, limit
 func (_m *Service) GetUsers(ctx context.Context, lastID string, limit int) ([]users.User, error) {
 	ret := _m.Called(ctx, lastID, limit)
@@ -104,4 +127,34 @@ func (_m *Service) GetUsers(ctx context.Context, lastID string, limit int) ([]us
 	}
 
 	return r0, r1
+}
+
+// LoginUser provides a mock function with given fields: ctx, email, password
+func (_m *Service) LoginUser(ctx context.Context, email string, password string) (*users.User, string, error) {
+	ret := _m.Called(ctx, email, password)
+
+	var r0 *users.User
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) *users.User); ok {
+		r0 = rf(ctx, email, password)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*users.User)
+		}
+	}
+
+	var r1 string
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) string); ok {
+		r1 = rf(ctx, email, password)
+	} else {
+		r1 = ret.Get(1).(string)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, string, string) error); ok {
+		r2 = rf(ctx, email, password)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }

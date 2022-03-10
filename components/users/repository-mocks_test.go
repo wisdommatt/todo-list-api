@@ -12,6 +12,7 @@ import (
 type userRepoMock struct {
 	saveUserFunc       func(ctx context.Context, user User) (*User, error)
 	getUserByIDFunc    func(ctx context.Context, userID string) (*User, error)
+	getUserByEmailFunc func(ctx context.Context, email string) (*User, error)
 	getUsersFunc       func(ctx context.Context, lastID string, limit int) ([]User, error)
 	deleteUserByIDFunc func(ctx context.Context, userID string) (*User, error)
 }
@@ -30,4 +31,8 @@ func (r *userRepoMock) getUsers(ctx context.Context, lastID string, limit int) (
 
 func (r *userRepoMock) deleteUserByID(ctx context.Context, userID string) (*User, error) {
 	return r.deleteUserByIDFunc(ctx, userID)
+}
+
+func (r *userRepoMock) getUserByEmail(ctx context.Context, email string) (*User, error) {
+	return r.getUserByEmailFunc(ctx, email)
 }

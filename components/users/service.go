@@ -3,8 +3,10 @@ package users
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/sirupsen/logrus"
+	"github.com/wisdommatt/creativeadvtech-assessment/pkg/jwt"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -14,8 +16,10 @@ import (
 type Service interface {
 	CreateUser(ctx context.Context, user User) (*User, error)
 	GetUser(ctx context.Context, userID string) (*User, error)
+	GetUserByEmail(ctx context.Context, email string) (*User, error)
 	GetUsers(ctx context.Context, lastID string, limit int) ([]User, error)
 	DeleteUser(ctx context.Context, userID string) (*User, error)
+	LoginUser(ctx context.Context, email, password string) (*User, string, error)
 }
 
 // userService is the default implementation for Service
@@ -50,6 +54,12 @@ func (s *userService) CreateUser(ctx context.Context, user User) (*User, error) 
 		return nil, errSomethingWentWrong
 	}
 	user.Password = string(hashedPassword)
+	userWithEmail, _ := s.GetUserByEmail(ctx, user.Email)
+	if userWithEmail != nil {
+		err = fmt.Errorf("user with email %s already exist", user.Email)
+		log.WithError(err).Error()
+		return nil, err
+	}
 	newUser, err := s.userRepo.saveUser(ctx, user)
 	if err != nil {
 		log.WithError(err).Error("an error occured while creating new user")
@@ -63,6 +73,16 @@ func (s *userService) GetUser(ctx context.Context, userID string) (*User, error)
 	user, err := s.userRepo.getUserByID(ctx, userID)
 	if err != nil {
 		log.WithError(err).Error("an error occured while retrieving user")
+		return nil, fmt.Errorf("user does not exist")
+	}
+	return user, nil
+}
+
+func (s *userService) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	log := s.log.WithContext(ctx).WithField("email", email)
+	user, err := s.userRepo.getUserByEmail(ctx, email)
+	if err != nil {
+		log.WithError(err).Error("an error occured while retrieving user by email")
 		return nil, fmt.Errorf("user does not exist")
 	}
 	return user, nil
@@ -91,4 +111,25 @@ func (s *userService) DeleteUser(ctx context.Context, userID string) (*User, err
 		return nil, errSomethingWentWrong
 	}
 	return user, nil
+}
+
+func (s *userService) LoginUser(ctx context.Context, email, password string) (*User, string, error) {
+	log := s.log.WithField("email", email)
+	userWithEmail, err := s.GetUserByEmail(ctx, email)
+	if err != nil {
+		return nil, "", fmt.Errorf("invalid credentials")
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(userWithEmail.Password), []byte(password))
+	if err != nil {
+		log.WithError(err).Error()
+		return nil, "", fmt.Errorf("invalid credentials")
+	}
+	authToken, err := jwt.Encode([]byte(os.Getenv("JWT_SECRET")), jwt.Payload{
+		UserID: userWithEmail.ID,
+	})
+	if err != nil {
+		log.WithError(err).Error()
+		return nil, "", errSomethingWentWrong
+	}
+	return userWithEmail, authToken, nil
 }
