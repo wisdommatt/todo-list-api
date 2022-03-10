@@ -6,6 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Service is the interface that describes a user
@@ -43,6 +44,12 @@ func NewService(mongoDB *mongo.Database, log *logrus.Logger) *userService {
 
 func (s *userService) CreateUser(ctx context.Context, user User) (*User, error) {
 	log := s.log.WithContext(ctx).WithField("user", user)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		log.WithError(err).Error()
+		return nil, errSomethingWentWrong
+	}
+	user.Password = string(hashedPassword)
 	newUser, err := s.userRepo.saveUser(ctx, user)
 	if err != nil {
 		log.WithError(err).Error("an error occured while creating new user")

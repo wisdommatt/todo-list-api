@@ -9,6 +9,13 @@ import (
 	"github.com/wisdommatt/creativeadvtech-assessment/components/users"
 )
 
+type createUserInput struct {
+	FirstName string `json:"firstName" bson:"firstName,omitempty"`
+	LastName  string `json:"lastName" bson:"lastName,omitempty"`
+	Email     string `json:"email" bson:"email,omitempty"`
+	Password  string `json:"password" bson:"password,omitempty"`
+}
+
 type userApiResponse struct {
 	Status  string      `json:"status"`
 	Message string      `json:"message"`
@@ -25,7 +32,7 @@ type getUsersResponse struct {
 // endpoint.
 func HandleCreateUserEndpoint(userService users.Service) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		var payload users.User
+		var payload createUserInput
 		err := json.NewDecoder(r.Body).Decode(&payload)
 		if err != nil {
 			rw.WriteHeader(http.StatusBadRequest)
@@ -35,7 +42,12 @@ func HandleCreateUserEndpoint(userService users.Service) http.HandlerFunc {
 			})
 			return
 		}
-		user, err := userService.CreateUser(r.Context(), payload)
+		user, err := userService.CreateUser(r.Context(), users.User{
+			FirstName: payload.FirstName,
+			LastName:  payload.LastName,
+			Email:     payload.Email,
+			Password:  payload.Password,
+		})
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(rw).Encode(userApiResponse{
