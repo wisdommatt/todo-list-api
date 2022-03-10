@@ -1,38 +1,34 @@
-# Tasks Management API Assessment
+# Todo List API
 
-Go Developer assessment for creative advanced technologies.
+Todo List REST API written in Go (Golang).
 
 ## Explanation
 
-This is the solution to the task management api assessment.
+This is a task management api sample project.
 
 To avoid unnecessary complexity and overengineering i decided to:
 
 * Use just logs rather than implementing tracing with open telemetry.
 * Maintain a simple folder structure.
-* Write less tests for duplicated use cases (mainly because it's an assessment)
-
+* Write less tests for duplicated use cases (mainly because it's an sample project)
 
 ## Testing
 
-I did not test all parts of the codebase to avoid spending too much time on the project, since this is just and assessment project.
+I did not test all parts of the codebase to avoid spending too much time on the project, since this is just a sample/dummy project.
 
 To show how i test my codebase i have a sample full coverage test for each use case.
 
 * [Service Layer](components/users/service_test.go)
-* [Http Handlers](http-handlers/users_test.go)
-
+* [HTTP Handlers](http-handlers/users_test.go)
 
 ## Database
 
 This API uses mongodb as the primary database.
 
-
 ## How to execute / use
 
 * Using docker **(recommended)** run `docker-compose up` and connect to `localhost:5555`
 * Using local mongodb and go installation, run `go run main.go` then adjust environment variables in `.env` to fit your current setup.
-
 
 ## Endpoints
 
@@ -49,7 +45,6 @@ Sample Payload:
    "email": "talk2wisdommatt@gmail.com"
 }
 ```
-
 
 ---
 
