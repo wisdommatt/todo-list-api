@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/mock"
-	"github.com/wisdommatt/creativeadvtech-assessment/components/users"
-	mockUsers "github.com/wisdommatt/creativeadvtech-assessment/mocks/components/users"
+	"github.com/wisdommatt/todo-list-api/components/users"
+	mockUsers "github.com/wisdommatt/todo-list-api/mocks/components/users"
 )
 
 // tests for other endpoints in this application would follow this

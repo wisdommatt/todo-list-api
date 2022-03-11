@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
-	"github.com/wisdommatt/creativeadvtech-assessment/components/users"
+	"github.com/wisdommatt/todo-list-api/components/users"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 

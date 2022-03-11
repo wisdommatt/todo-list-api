@@ -6,7 +6,7 @@ import (
 	context "context"
 
 	mock "github.com/stretchr/testify/mock"
-	tasks "github.com/wisdommatt/creativeadvtech-assessment/components/tasks"
+	tasks "github.com/wisdommatt/todo-list-api/components/tasks"
 
 	time "time"
 )

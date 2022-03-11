@@ -1,4 +1,4 @@
-module github.com/wisdommatt/creativeadvtech-assessment
+module github.com/wisdommatt/todo-list-api
 
 go 1.16
 

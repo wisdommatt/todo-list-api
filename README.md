@@ -42,7 +42,23 @@ Sample Payload:
 {
    "firstName": "Wisdom",
    "lastName": "Matthew",
-   "email": "talk2wisdommatt@gmail.com"
+   "email": "talk2wisdommatt@gmail.com",
+   "password": "password"
+}
+```
+
+---
+
+##### Login User
+
+POST: `/users/login`
+
+Sample Payload:
+
+```json
+{
+   "email": "talk2wisdommatt@gmail.com",
+   "password": "password",
 }
 ```
 

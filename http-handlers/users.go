@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi"
-	"github.com/wisdommatt/creativeadvtech-assessment/components/users"
+	"github.com/wisdommatt/todo-list-api/components/users"
 )
 
 type createUserInput struct {

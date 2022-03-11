@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
-	"github.com/wisdommatt/creativeadvtech-assessment/pkg/jwt"
+	"github.com/wisdommatt/todo-list-api/pkg/jwt"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
