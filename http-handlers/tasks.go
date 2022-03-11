@@ -21,6 +21,10 @@ type getTasksResponse struct {
 	Tasks   []tasks.Task `json:"tasks"`
 }
 
+type updateTaskPayload struct {
+	Status string `json:"status"`
+}
+
 // HandleCreateTaskEndpoint is the http endpoint handler for creating a
 // new task.
 func HandleCreateTaskEndpoint(taskService tasks.Service) http.HandlerFunc {
@@ -117,6 +121,40 @@ func HandleDeleteTaskEndpoint(taskService tasks.Service) http.HandlerFunc {
 		json.NewEncoder(rw).Encode(taskApiResponse{
 			Status:  "success",
 			Message: "task deleted successfully",
+			Task:    task,
+		})
+	}
+}
+
+// HandleUpdateTaskEndpoint is the http endpoint handler for task update.
+func HandleUpdateTaskEndpoint(taskService tasks.Service) http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		taskID := chi.URLParam(r, "taskId")
+		var payload updateTaskPayload
+		err := json.NewDecoder(r.Body).Decode(&payload)
+		if err != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(rw).Encode(taskApiResponse{
+				Status:  "error",
+				Message: "invalid json payload",
+			})
+			return
+		}
+		task, err := taskService.UpdateTask(r.Context(), taskID, tasks.Task{
+			Status: payload.Status,
+		})
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(rw).Encode(taskApiResponse{
+				Status:  "error",
+				Message: err.Error(),
+			})
+			return
+		}
+		rw.WriteHeader(http.StatusOK)
+		json.NewEncoder(rw).Encode(taskApiResponse{
+			Status:  "success",
+			Message: "task updated successfully",
 			Task:    task,
 		})
 	}

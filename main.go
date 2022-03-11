@@ -55,6 +55,7 @@ func main() {
 		r.Use(isLoggedInMiddleware)
 		r.Post("/", httphandlers.HandleCreateTaskEndpoint(taskServie))
 		r.Get("/{taskId}", httphandlers.HandleGetTaskEndpoint(taskServie))
+		r.Put("/{taskId}", httphandlers.HandleUpdateTaskEndpoint(taskServie))
 		r.Delete("/{taskId}", httphandlers.HandleDeleteTaskEndpoint(taskServie))
 	})
 

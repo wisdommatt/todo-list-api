@@ -24,6 +24,7 @@ type repository interface {
 	getTasks(ctx context.Context, userID, lastID string, limit int) ([]Task, error)
 	deleteTaskByID(ctx context.Context, taskID string) (*Task, error)
 	getTaskWithTimeRange(ctx context.Context, userID string, startTime, endTime time.Time) (*Task, error)
+	updateTaskByID(ctx context.Context, taskID string, update Task) error
 }
 
 // taskRepo is the default implementation for task repository
@@ -104,4 +105,11 @@ func (r *taskRepo) getTaskWithTimeRange(ctx context.Context, userID string, star
 		return nil, err
 	}
 	return &task, nil
+}
+
+func (r *taskRepo) updateTaskByID(ctx context.Context, taskID string, update Task) error {
+	filter := bson.M{"_id": taskID}
+	updateBSON := bson.M{"$set": update}
+	_, err := r.tasksCollection.UpdateOne(ctx, filter, updateBSON)
+	return err
 }

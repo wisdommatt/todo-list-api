@@ -12,15 +12,6 @@ To avoid unnecessary complexity and overengineering i decided to:
 * Maintain a simple folder structure.
 * Write less tests for duplicated use cases (mainly because it's an sample project)
 
-## Testing
-
-I did not test all parts of the codebase to avoid spending too much time on the project, since this is just a sample/dummy project.
-
-To show how i test my codebase i have a sample full coverage test for each use case.
-
-* [Service Layer](components/users/service_test.go)
-* [HTTP Handlers](http-handlers/users_test.go)
-
 ## Database
 
 This API uses mongodb as the primary database.
@@ -113,6 +104,22 @@ GET: `/tasks/{taskId}`
 GET: `/users/{userId}/tasks?lastId=&pagination=20`
 
 ---
+
+##### Update Task
+
+PUT: `/tasks/{taskId}`
+
+Sample Payload:
+
+```json
+{
+    "status": "COMPLETED"
+}
+```
+
+---
+
+
 
 ##### Delete Task
 

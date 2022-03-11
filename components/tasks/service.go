@@ -16,6 +16,7 @@ type Service interface {
 	GetTask(ctx context.Context, taskID string) (*Task, error)
 	GetTasks(ctx context.Context, userID, lastID string, limit int) ([]Task, error)
 	DeleteTask(ctx context.Context, taskID string) (*Task, error)
+	UpdateTask(ctx context.Context, taskID string, update Task) (*Task, error)
 }
 
 // taskService is the default implementation for Service interface.
@@ -100,4 +101,14 @@ func (s *taskService) DeleteTask(ctx context.Context, taskID string) (*Task, err
 		return nil, errSomethingWentWrong
 	}
 	return task, nil
+}
+
+func (s *taskService) UpdateTask(ctx context.Context, taskID string, update Task) (*Task, error) {
+	log := s.log.WithContext(ctx).WithField("taskId", taskID).WithField("update", update)
+	err := s.taskRepo.updateTaskByID(ctx, taskID, update)
+	if err != nil {
+		log.WithError(err).Error()
+		return nil, errSomethingWentWrong
+	}
+	return s.GetTask(ctx, taskID)
 }
