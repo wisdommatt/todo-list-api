@@ -2,11 +2,13 @@ package httphandlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi"
-	"github.com/wisdommatt/todo-list-api/components/tasks"
+	"github.com/wisdommatt/todo-list-api/services/tasks"
+	"github.com/wisdommatt/todo-list-api/services/users"
 )
 
 type taskApiResponse struct {
@@ -25,27 +27,30 @@ type updateTaskPayload struct {
 	Status string `json:"status"`
 }
 
-// HandleCreateTaskEndpoint is the http endpoint handler for creating a
-// new task.
-func HandleCreateTaskEndpoint(taskService tasks.Service) http.HandlerFunc {
+// HandleCreateTaskEndpoint is the http endpoint handler for creating a new task.
+func HandleCreateTaskEndpoint(tasksService *tasks.Service, usersService *users.Service) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		var payload tasks.Task
 		err := json.NewDecoder(r.Body).Decode(&payload)
 		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(rw).Encode(taskApiResponse{
-				Status:  "error",
-				Message: "invalid json payload",
-			})
+			ErrorResponse(rw, "error", "invalid json payload", http.StatusBadRequest)
 			return
 		}
-		task, err := taskService.CreateTask(r.Context(), payload)
+		_, err = usersService.GetUser(r.Context(), payload.UserID)
 		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(rw).Encode(taskApiResponse{
-				Status:  "error",
-				Message: err.Error(),
-			})
+			ErrorResponse(rw, "error", "user does not exist", http.StatusBadRequest)
+			return
+		}
+		// checking if the new task is overlapping with another existing task.
+		overlappingTask, _ := tasksService.GetTaskWithinTimeRange(r.Context(), payload.UserID, payload.StartTime, payload.EndTime)
+		if overlappingTask != nil {
+			errMsg := fmt.Sprintf("this task if overlapping with %s, pick another time", overlappingTask.Title)
+			ErrorResponse(rw, "error", errMsg, http.StatusBadRequest)
+			return
+		}
+		task, err := tasksService.CreateTask(r.Context(), payload)
+		if err != nil {
+			ErrorResponse(rw, "error", errSomethingWentWrongMsg, http.StatusInternalServerError)
 			return
 		}
 		rw.WriteHeader(http.StatusOK)
@@ -58,16 +63,12 @@ func HandleCreateTaskEndpoint(taskService tasks.Service) http.HandlerFunc {
 }
 
 // HandleGetTaskEndpoint is the http endpoint handler to get task details.
-func HandleGetTaskEndpoint(taskService tasks.Service) http.HandlerFunc {
+func HandleGetTaskEndpoint(tasksService *tasks.Service) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		taskID := chi.URLParam(r, "taskId")
-		task, err := taskService.GetTask(r.Context(), taskID)
+		task, err := tasksService.GetTask(r.Context(), taskID)
 		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(rw).Encode(taskApiResponse{
-				Status:  "error",
-				Message: err.Error(),
-			})
+			ErrorResponse(rw, "error", "task does not exist", http.StatusBadRequest)
 			return
 		}
 		rw.WriteHeader(http.StatusOK)
@@ -79,20 +80,15 @@ func HandleGetTaskEndpoint(taskService tasks.Service) http.HandlerFunc {
 	}
 }
 
-// HandleGetTasksEndpoint is the http endpoint handler for retrieving
-// user tasks.
-func HandleGetTasksEndpoint(taskService tasks.Service) http.HandlerFunc {
+// HandleGetTasksEndpoint is the http endpoint handler for retrieving user tasks.
+func HandleGetTasksEndpoint(tasksService *tasks.Service) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		userID := chi.URLParam(r, "userId")
 		lastID := r.URL.Query().Get("lastId")
 		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-		tasks, err := taskService.GetTasks(r.Context(), userID, lastID, limit)
+		tasks, err := tasksService.GetTasks(r.Context(), userID, lastID, limit)
 		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(rw).Encode(getTasksResponse{
-				Status:  "error",
-				Message: err.Error(),
-			})
+			ErrorResponse(rw, "error", errSomethingWentWrongMsg, http.StatusInternalServerError)
 			return
 		}
 		rw.WriteHeader(http.StatusOK)
@@ -105,16 +101,17 @@ func HandleGetTasksEndpoint(taskService tasks.Service) http.HandlerFunc {
 }
 
 // HandleDeleteTaskEndpoint is the http endpoint handler for deleting task.
-func HandleDeleteTaskEndpoint(taskService tasks.Service) http.HandlerFunc {
+func HandleDeleteTaskEndpoint(tasksService *tasks.Service) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		taskID := chi.URLParam(r, "taskId")
-		task, err := taskService.DeleteTask(r.Context(), taskID)
+		_, err := tasksService.GetTask(r.Context(), taskID)
 		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(rw).Encode(taskApiResponse{
-				Status:  "error",
-				Message: err.Error(),
-			})
+			ErrorResponse(rw, "error", "invalid task id", http.StatusBadRequest)
+			return
+		}
+		task, err := tasksService.DeleteTask(r.Context(), taskID)
+		if err != nil {
+			ErrorResponse(rw, "error", errSomethingWentWrongMsg, http.StatusInternalServerError)
 			return
 		}
 		rw.WriteHeader(http.StatusOK)
@@ -127,28 +124,20 @@ func HandleDeleteTaskEndpoint(taskService tasks.Service) http.HandlerFunc {
 }
 
 // HandleUpdateTaskEndpoint is the http endpoint handler for task update.
-func HandleUpdateTaskEndpoint(taskService tasks.Service) http.HandlerFunc {
+func HandleUpdateTaskEndpoint(tasksService *tasks.Service) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		taskID := chi.URLParam(r, "taskId")
 		var payload updateTaskPayload
 		err := json.NewDecoder(r.Body).Decode(&payload)
 		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(rw).Encode(taskApiResponse{
-				Status:  "error",
-				Message: "invalid json payload",
-			})
+			ErrorResponse(rw, "error", "invalid json payload", http.StatusBadRequest)
 			return
 		}
-		task, err := taskService.UpdateTask(r.Context(), taskID, tasks.Task{
+		task, err := tasksService.UpdateTask(r.Context(), taskID, tasks.Task{
 			Status: payload.Status,
 		})
 		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(rw).Encode(taskApiResponse{
-				Status:  "error",
-				Message: err.Error(),
-			})
+			ErrorResponse(rw, "error", errSomethingWentWrongMsg, http.StatusInternalServerError)
 			return
 		}
 		rw.WriteHeader(http.StatusOK)

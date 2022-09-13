@@ -2,11 +2,12 @@ package httphandlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi"
-	"github.com/wisdommatt/todo-list-api/components/users"
+	"github.com/wisdommatt/todo-list-api/services/users"
 )
 
 type createUserInput struct {
@@ -40,32 +41,28 @@ type loginUserResponse struct {
 	AuthToken string      `json:"authToken"`
 }
 
-// HandleCreateUserEndpoint is the http handler for create user
-// endpoint.
-func HandleCreateUserEndpoint(userService users.Service) http.HandlerFunc {
+func HandleCreateUserEndpoint(usersService *users.Service) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		var payload createUserInput
 		err := json.NewDecoder(r.Body).Decode(&payload)
 		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(rw).Encode(userApiResponse{
-				Status:  "error",
-				Message: "invalid json payload",
-			})
+			ErrorResponse(rw, "error", "invalid json payload", http.StatusBadRequest)
 			return
 		}
-		user, err := userService.CreateUser(r.Context(), users.User{
+		userWithEmail, _ := usersService.GetUserByEmail(r.Context(), payload.Email)
+		if userWithEmail != nil {
+			errMsg := fmt.Sprintf("user with email %s already exist", payload.Email)
+			ErrorResponse(rw, "error", errMsg, http.StatusBadRequest)
+			return
+		}
+		user, err := usersService.CreateUser(r.Context(), users.User{
 			FirstName: payload.FirstName,
 			LastName:  payload.LastName,
 			Email:     payload.Email,
 			Password:  payload.Password,
 		})
 		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(rw).Encode(userApiResponse{
-				Status:  "error",
-				Message: err.Error(),
-			})
+			ErrorResponse(rw, "error", errSomethingWentWrongMsg, http.StatusInternalServerError)
 			return
 		}
 		rw.WriteHeader(http.StatusOK)
@@ -78,16 +75,12 @@ func HandleCreateUserEndpoint(userService users.Service) http.HandlerFunc {
 }
 
 // HandleGetUserEndpoint is the http endpoint handler to get user details.
-func HandleGetUserEndpoint(userService users.Service) http.HandlerFunc {
+func HandleGetUserEndpoint(usersService *users.Service) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		userID := chi.URLParam(r, "userId")
-		user, err := userService.GetUser(r.Context(), userID)
+		user, err := usersService.GetUser(r.Context(), userID)
 		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(rw).Encode(userApiResponse{
-				Status:  "error",
-				Message: err.Error(),
-			})
+			ErrorResponse(rw, "error", "user does not exist", http.StatusBadRequest)
 			return
 		}
 		rw.WriteHeader(http.StatusOK)
@@ -99,19 +92,14 @@ func HandleGetUserEndpoint(userService users.Service) http.HandlerFunc {
 	}
 }
 
-// HandleGetUsersEndpoint is the http endpoint handler for retrieving
-// users.
-func HandleGetUsersEndpoint(userService users.Service) http.HandlerFunc {
+// HandleGetUsersEndpoint is the http endpoint handler for retrieving users.
+func HandleGetUsersEndpoint(usersService *users.Service) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		lastID := r.URL.Query().Get("lastId")
 		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-		users, err := userService.GetUsers(r.Context(), lastID, limit)
+		users, err := usersService.GetUsers(r.Context(), lastID, limit)
 		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(rw).Encode(getUsersResponse{
-				Status:  "error",
-				Message: err.Error(),
-			})
+			ErrorResponse(rw, "error", errSomethingWentWrongMsg, http.StatusInternalServerError)
 			return
 		}
 		rw.WriteHeader(http.StatusOK)
@@ -124,16 +112,17 @@ func HandleGetUsersEndpoint(userService users.Service) http.HandlerFunc {
 }
 
 // HandleDeleteUserEndpoint is the http endpoint handler for deleting user.
-func HandleDeleteUserEndpoint(userService users.Service) http.HandlerFunc {
+func HandleDeleteUserEndpoint(usersService *users.Service) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		userID := chi.URLParam(r, "userId")
-		user, err := userService.DeleteUser(r.Context(), userID)
+		_, err := usersService.GetUser(r.Context(), userID)
 		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(rw).Encode(userApiResponse{
-				Status:  "error",
-				Message: err.Error(),
-			})
+			ErrorResponse(rw, "error", "user does not exist", http.StatusBadRequest)
+			return
+		}
+		user, err := usersService.DeleteUser(r.Context(), userID)
+		if err != nil {
+			ErrorResponse(rw, "error", errSomethingWentWrongMsg, http.StatusInternalServerError)
 			return
 		}
 		rw.WriteHeader(http.StatusOK)
@@ -146,25 +135,17 @@ func HandleDeleteUserEndpoint(userService users.Service) http.HandlerFunc {
 }
 
 // HandleUserLoginEndpoint is the http endpoint handler for user login.
-func HandleUserLoginEndpoint(userService users.Service) http.HandlerFunc {
+func HandleUserLoginEndpoint(usersService *users.Service) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		var payload loginUserInput
 		err := json.NewDecoder(r.Body).Decode(&payload)
 		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(rw).Encode(loginUserResponse{
-				Status:  "error",
-				Message: "invalid json payload",
-			})
+			ErrorResponse(rw, "error", "invalid json payload", http.StatusBadRequest)
 			return
 		}
-		user, authToken, err := userService.LoginUser(r.Context(), payload.Email, payload.Password)
+		user, authToken, err := usersService.LoginUser(r.Context(), payload.Email, payload.Password)
 		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(rw).Encode(loginUserResponse{
-				Status:  "error",
-				Message: err.Error(),
-			})
+			ErrorResponse(rw, "error", errSomethingWentWrongMsg, http.StatusInternalServerError)
 			return
 		}
 		rw.WriteHeader(http.StatusOK)

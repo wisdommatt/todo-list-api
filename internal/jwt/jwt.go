@@ -49,7 +49,7 @@ func Decode(secretKey []byte, tokenString string) (payload *Payload, err error) 
 		}
 		return payload, nil
 	}
-	err = fmt.Errorf("an error occured while decoding jwt")
+	err = fmt.Errorf("failed to decode jwt")
 	return nil, err
 }
 

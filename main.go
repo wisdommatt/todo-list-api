@@ -11,10 +11,10 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
-	"github.com/wisdommatt/todo-list-api/components/tasks"
-	"github.com/wisdommatt/todo-list-api/components/users"
-	httphandlers "github.com/wisdommatt/todo-list-api/http-handlers"
-	"github.com/wisdommatt/todo-list-api/pkg/jwt"
+	handlers "github.com/wisdommatt/todo-list-api/handlers"
+	"github.com/wisdommatt/todo-list-api/internal/jwt"
+	"github.com/wisdommatt/todo-list-api/services/tasks"
+	"github.com/wisdommatt/todo-list-api/services/users"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -34,29 +34,29 @@ func main() {
 	godotenv.Load(".env", ".env-defaults")
 
 	mongoDB := mustConnectMongoDB(log)
-	userService := users.NewService(mongoDB, log)
-	taskServie := tasks.NewService(userService, mongoDB, log)
+	usersService := users.NewUsersService(mongoDB, log)
+	tasksService := tasks.NewService(usersService, mongoDB, log)
 
 	router := chi.NewRouter()
 	router.Route("/users/", func(r chi.Router) {
-		r.Post("/", httphandlers.HandleCreateUserEndpoint(userService))
-		r.Post("/login", httphandlers.HandleUserLoginEndpoint(userService))
+		r.Post("/", handlers.HandleCreateUserEndpoint(usersService))
+		r.Post("/login", handlers.HandleUserLoginEndpoint(usersService))
 
 		r.Group(func(r chi.Router) {
 			r.Use(isLoggedInMiddleware)
-			r.Get("/{userId}", httphandlers.HandleGetUserEndpoint(userService))
-			r.Get("/", httphandlers.HandleGetUsersEndpoint(userService))
-			r.Delete("/{userId}", httphandlers.HandleDeleteUserEndpoint(userService))
-			r.Get("/{userId}/tasks", httphandlers.HandleGetTasksEndpoint(taskServie))
+			r.Get("/{userId}", handlers.HandleGetUserEndpoint(usersService))
+			r.Get("/", handlers.HandleGetUsersEndpoint(usersService))
+			r.Delete("/{userId}", handlers.HandleDeleteUserEndpoint(usersService))
+			r.Get("/{userId}/tasks", handlers.HandleGetTasksEndpoint(tasksService))
 		})
 	})
 
 	router.Route("/tasks/", func(r chi.Router) {
 		r.Use(isLoggedInMiddleware)
-		r.Post("/", httphandlers.HandleCreateTaskEndpoint(taskServie))
-		r.Get("/{taskId}", httphandlers.HandleGetTaskEndpoint(taskServie))
-		r.Put("/{taskId}", httphandlers.HandleUpdateTaskEndpoint(taskServie))
-		r.Delete("/{taskId}", httphandlers.HandleDeleteTaskEndpoint(taskServie))
+		r.Post("/", handlers.HandleCreateTaskEndpoint(tasksService, usersService))
+		r.Get("/{taskId}", handlers.HandleGetTaskEndpoint(tasksService))
+		r.Put("/{taskId}", handlers.HandleUpdateTaskEndpoint(tasksService))
+		r.Delete("/{taskId}", handlers.HandleDeleteTaskEndpoint(tasksService))
 	})
 
 	server := &http.Server{
