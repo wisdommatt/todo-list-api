@@ -1,6 +1,6 @@
 #! /bin/sh
 
-ECS_URI="$(dotenv get ECS_URI)"
+ECR_URI="$(dotenv get ECR_URI)"
 
 /bin/bash ./build/scripts/aws-setup.sh
 
@@ -8,7 +8,7 @@ echo "$(date) - building docker image"
 docker build -t todo-list-api .
 
 echo "$(date) - tagging docker image"
-docker tag todo-list-api:latest ${ECS_URI}:latest
+docker tag todo-list-api:latest ${ECR_URI}:latest
 
-echo "$(date) - pushing docker image to ECS"
-docker push ${ECS_URI}:latest
+echo "$(date) - pushing docker image to ECR"
+docker push ${ECR_URI}:latest

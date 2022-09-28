@@ -2,10 +2,10 @@
 
 AWS_ACCESS_KEY_ID="$(dotenv get AWS_ACCESS_KEY_ID)"
 AWS_SECRET_ACCESS_KEY="$(dotenv get AWS_SECRET_ACCESS_KEY)"
-ECS_URI="$(dotenv get ECS_URI)"
-ECS_REGION="$(dotenv get ECS_REGION)"
-ECS_USERNAME="$(dotenv get ECS_USERNAME)"
-ECS_PASSWORD="$(dotenv get ECS_PASSWORD)"
+ECR_URI="$(dotenv get ECR_URI)"
+ECR_REGION="$(dotenv get ECR_REGION)"
+ECR_USERNAME="$(dotenv get ECR_USERNAME)"
+ECR_PASSWORD="$(dotenv get ECR_PASSWORD)"
 
 echo "$(date) checking if aws cli is installed"
 if ! [ -x "$(command -v aws)" ]; then
@@ -26,4 +26,4 @@ aws_access_key_id = ${AWS_ACCESS_KEY_ID}
 aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}" > ~/.aws/credentials
 
 echo "$(date) aws ecr docker login"
-aws ecr get-login-password --region ${ECS_REGION} | docker login --username ${ECS_USERNAME} --password-stdin ${ECS_PASSWORD}
+aws ecr get-login-password --region ${ECR_REGION} | docker login --username ${ECR_USERNAME} --password-stdin ${ECR_PASSWORD}
