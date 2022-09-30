@@ -35,13 +35,6 @@ jobs:
 
         echo "AWS setup"
 
-        AWS_ACCESS_KEY_ID="$(dotenv get AWS_ACCESS_KEY_ID)"
-        AWS_SECRET_ACCESS_KEY="$(dotenv get AWS_SECRET_ACCESS_KEY)"
-        ECR_URI="$(dotenv get ECR_URI)"
-        ECR_REGION="$(dotenv get ECR_REGION)"
-        ECR_USERNAME="$(dotenv get ECR_USERNAME)"
-        ECR_PASSWORD="$(dotenv get ECR_PASSWORD)"
-
         echo "$(date) checking if aws cli is installed"
         if ! [ -x "$(command -v aws)" ]; then
             echo "$(date) installing aws cli"
@@ -66,8 +59,6 @@ jobs:
         ls -a
 
         cat .env
-
-        /bin/bash ./build/scripts/aws-setup.sh
 
         echo "$(date) - building docker image"
         docker build -t todo-list-api .
