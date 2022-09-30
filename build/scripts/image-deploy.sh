@@ -2,7 +2,9 @@
 
 ECR_URI="$(dotenv get ECR_URI)"
 
-ls
+ls -a
+
+cat .env
 
 /bin/bash ./build/scripts/aws-setup.sh
 
