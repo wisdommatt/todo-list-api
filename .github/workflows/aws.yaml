@@ -29,4 +29,5 @@ jobs:
 
     - name: Deploy Docker Image
       run: |
+        cat .env
         ./build/scripts/image-deploy.sh
