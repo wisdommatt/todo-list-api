@@ -28,6 +28,7 @@ jobs:
         fail_on_empty: true
 
     - name: Deploy Docker Image
+      shell: bash
       run: |
         cat .env
         dotenv --version
