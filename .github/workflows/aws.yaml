@@ -30,4 +30,5 @@ jobs:
     - name: Deploy Docker Image
       run: |
         cat .env
+        dotenv --version
         ./build/scripts/image-deploy.sh
