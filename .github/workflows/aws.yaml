@@ -14,27 +14,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Setup env file
-      uses: SpicyPizza/create-envfile@v1.3
-      with:
-        envkey_ECR_URI: ${{ secrets.ECR_URI }}
-        envkey_ECR_REGION: ${{ secrets.ECR_REGION }}
-        envkey_ECR_USERNAME: ${{ secrets.ECR_USERNAME }}
-        envkey_ECR_PASSWORD: ${{ secrets.ECR_PASSWORD }}
-        envkey_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        envkey_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        envkey_MONGODB_URI: ${{ secrets.MONGODB_URI }}
-        file_name: .env
-        fail_on_empty: true
-
-    - name: Deploy Docker Image
+    - name: AWS Setup
       shell: bash
       run: |
-        cat .env
-        dotenv --version
-
-        echo "AWS setup"
-
         echo "$(date) checking if aws cli is installed"
         if ! [ -x "$(command -v aws)" ]; then
             echo "$(date) installing aws cli"
@@ -56,10 +38,9 @@ jobs:
         echo "$(date) aws ecr docker login"
         aws ecr get-login-password --region ${{ secrets.ECR_REGION }} | docker login --username ${{ secrets.ECR_USERNAME }} --password-stdin ${{ secrets.ECR_PASSWORD }}
 
-        ls -a
-
-        cat .env
-
+    - name: Deploy Docker Image to AWS ECR
+      shell: bash
+      run: |
         echo "$(date) - building docker image"
         docker build -t todo-list-api .
 
