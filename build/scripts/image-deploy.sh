@@ -2,6 +2,8 @@
 
 ECR_URI="$(dotenv get ECR_URI)"
 
+ls
+
 /bin/bash ./build/scripts/aws-setup.sh
 
 echo "$(date) - building docker image"
