@@ -63,8 +63,8 @@ jobs:
         echo "$(date) - building docker image"
         docker build -t todo-list-api .
 
-        echo "$(date) - tagging docker image - $ECR_URI"
-        docker tag todo-list-api:latest ${ECR_URI}:latest
+        echo "$(date) - tagging docker image - ${{ secrets.ECR_URI }}"
+        docker tag todo-list-api:latest ${{ secrets.ECR_URI }}:latest
 
         echo "$(date) - pushing docker image to ECR"
-        docker push ${ECR_URI}:latest
+        docker push ${{ secrets.ECR_URI }}:latest
